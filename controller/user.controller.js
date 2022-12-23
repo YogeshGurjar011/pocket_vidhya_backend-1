@@ -10,7 +10,7 @@ const { request } = require('express');
 
 const user_signup = async (req,res,next)=>{
     try {
-        await db.query(`select * from user where username=? and Mobile_no=?`,[req.body.username,req.body.mobile_no],(err,result,fields)=>{
+        await db.query(`select * from user where username=? and Mobile_no=?`,[req.body.username,req.body.Mobile_no],(err,result,fields)=>{
             if(err){
                 res.status(401).send({
                     success:false,
@@ -18,7 +18,7 @@ const user_signup = async (req,res,next)=>{
                 });
             }
             if(!result.length){
-                db.query(`insert into user (username,Mobile_no) values (?,?)`,[req.body.username,req.body.mobile_no],(err,result,fields)=>{
+                db.query(`insert into user (username,Mobile_no) values (?,?)`,[req.body.username,req.body.Mobile_no],(err,result,fields)=>{
                     if(err){
                         res.status(400).send({
                             success:false,
@@ -51,34 +51,37 @@ const user_signup = async (req,res,next)=>{
 
 const signup = async (req, res, next) => {
     // try {
-    await db.query('select * from user where username=? and mobile_no=?', [req.body.mobile_no,req.body.username], (err, results, feilds) => {
+    await db.query('select * from user where username=? and Mobile_no=?', [req.body.Mobile_no,req.body.username], (err, results, feilds) => {
         if (err) {
             res.status(400).send({
                 success: false,
-                message: "user already exists please login",
+                message:"user already exits with this username",
                 err: err
             })
         }
         if (!results.length) {
-            db.query('Insert into user(username,mobile_no) values(?,?)', [req.body.username, req.body.mobile_no], (berr, bresult, feilds) => {
+            db.query('Insert into user(username,Mobile_no) values(?,?)', [req.body.username, req.body.Mobile_no], (berr, bresult, feilds) => {
                 if (berr) {
                     res.status(400).send({
                         success: false,
-                        err:"user already exists"
+                        message:"user already exits with this mobile number",
+                        err:berr
                     })
                 }
                 else {
-                    const token = jwt.sign({ data: bresult }, process.env.JWT_SECRET_KEY)
                    
-                    db.query('select * from user where mobile_no=?', [req.body.mobile_no], (cerr, cresult, feilds) => {
+                   
+                    db.query('select * from user where Mobile_no=?', [req.body.Mobile_no], (cerr, cresult, feilds) => {
                         if (cerr) {
                             res.status(400).send({
                                 success: false,
-                                err:"user already exists"
+                                message:"user already exists please login",
+                                err:cerr
                             })
                         }
                         else{
-                                   res.status(201).send({
+                            const token = jwt.sign({ data: cresult }, process.env.JWT_SECRET_KEY)    
+                        res.status(201).send({
                         success: true,
                         message: "Signup Successfully",
                         results: cresult,
@@ -111,7 +114,7 @@ const check_Mo_no = async (req, res, next) => {
             } else {
                 res.status(404).send({
                     success: false,
-                    message: "User Please signup first"
+                    message: "User not found Please signup first"
                     
                 })
             }
@@ -120,7 +123,7 @@ const check_Mo_no = async (req, res, next) => {
 }
 
 const user_login = async (req, res, next) => {
-    await db.query(`select * from user where Mobile_no=?`, [req.body.mobile_no], (err, result, feilds) => {
+    await db.query(`select * from user where Mobile_no=?`, [req.body.Mobile_no], (err, result, feilds) => {
 
         if (err) {
             res.status(400).send({
@@ -342,6 +345,36 @@ const avtar_category = async (req, res) => {
     }
 
 }
+
+const user_get_all_categories = async (req,res,next)=>{
+    try {
+        await db.query(`select * from category`,(err,result,feilds)=>{
+            if(err){
+                res.status(401).send({
+                    success:false,
+                    err:err.message 
+                });
+            }
+            if(!result){
+                res.status(404).send({
+                    success:false,
+                    msg:"data not found"
+                });
+            }else(
+                res.status(200).send({
+                    success:true,
+                    msg:"All categories ",
+                    results:result
+                })
+            )
+        })
+    } catch (error) {
+       res.status(500).send({
+        success:false,
+        error:error.message
+       }) 
+    }
+}
 // **************************************
 
 // const admin_addCategory=(req,res,next)=>{
@@ -405,6 +438,51 @@ const adminLogin1 = async (req, res, next) => {
         }
 
     })
+}
+
+const admin_forgot_password = (req, res) => {
+    try {
+        db.query(`select email from admin where email=?`, [req.body.email], (err, result) => {
+            if (err) {
+                res.status(400).send({
+                    success: false,
+                    err: err
+                })
+            }
+            if (result) {
+                if (!result.length) {
+                    res.status(400).send({
+                        success: false,
+                        msg: "Email not Found"
+                    })
+                }
+                else {
+                    const EncryptedPassword = bcrypt.hashSync(req.body.password, 10)
+                    db.query(`update admin set password=? where email=?`, [EncryptedPassword, req.body.email], (uerr, uresult) => {
+                        if (uerr) {
+                            res.status(400).send({
+                                success: false,
+                                error: uerr
+                            })
+                        }
+                        else {
+                            res.status(200).send({
+                                success: true,
+                                msg: "password reset successfully"
+                            })
+                        }
+                    })
+
+                }
+            }
+
+        })
+    } catch (error) {
+        res.status(400).send({
+            success: false,
+            err: error
+        })
+    }
 }
 
 // const add_question = async (req, res, next) => {
@@ -580,7 +658,7 @@ const get_question_user = async (req, res, next) => {
 
     const default_status = "ACTIVE";
     try {
-        await db.query('Select Question_id,Question,option1,option2,option3,option4,correct_option,Description from questionnaire where status= ? and category=? order by rand()', [default_status, req.body.category], (err, result, feilds) => {
+        await db.query('Select Question_id,Question,option1,option2,option3,option4,correct_option,Description from questionnaire where status= ? and category=? and language=? order by rand()', [default_status, req.body.category,req.body.language], (err, result, feilds) => {
             if (err) {
                 res.status(400).send({
                     success: false,
@@ -591,7 +669,7 @@ const get_question_user = async (req, res, next) => {
                 if (!result.length) {
                     res.status(400).send({
                         success: false,
-                        msg: `No Questions found for category ${req.body.category}`
+                        msg: `No Questions found for category ${req.body.category} or ${req.body.language}`
                     })
                 }
                 else {
@@ -836,6 +914,36 @@ const admin_add_category = async (req, res, next) => {
 const get_all_categories = async (req,res,next)=>{
     try {
         await db.query(`select * from category`,(err,result,feilds)=>{
+            if(err){
+                res.status(401).send({
+                    success:false,
+                    err:err.message 
+                });
+            }
+            if(!result){
+                res.status(404).send({
+                    success:false,
+                    msg:"data not found"
+                });
+            }else(
+                res.status(200).send({
+                    success:true,
+                    msg:"All categories ",
+                    results:result
+                })
+            )
+        })
+    } catch (error) {
+       res.status(500).send({
+        success:false,
+        error:error.message
+       }) 
+    }
+}
+
+const get_all_language = async (req,res,next)=>{
+    try {
+        await db.query(`select * from language`,(err,result,feilds)=>{
             if(err){
                 res.status(401).send({
                     success:false,
@@ -1319,12 +1427,165 @@ const admin_getQuestion_by_Id=async(req,res,next)=>{
         })
     }
 }
+
+const user_rank = async (req, res, next) => {
+    const auth = req.headers.authorization.split(" ")[1]
+    const decode = jwt.decode(auth)
+    const decoded_Username = decode.data[0].user_id
+    const user_name = decode.data[0].username
+
+    await db.query(`SELECT SUM(correct_Answers) AS sum_of_correct_Answers FROM attempts where user_id=${decoded_Username}`, (err1, results, feilds) => {
+        if (err1) {
+            res.status(400).send({
+                success: false,
+                err: err1
+            })
+        }
+        if (results) {
+            const total_score = results[0].sum_of_correct_Answers;
+            // if (total_score > 0 && total_score == total_score) {
+            // if(!decoded_Username){}
+            db.query(`select * from rank where user_id=${decoded_Username}`, (err, result) => {
+                if (err) {
+                    res.status(400).send({
+                        success: false,
+                        err: err
+                    })
+                }
+                if (!result.length) {
+
+                    // console.log(user_name)
+                    db.query(`insert into rank (user_id,user_name,average_score) values (?,?,?)`, [decoded_Username, user_name, total_score], (err, result) => {
+                        if (err) {
+                            res.status(400).send({
+                                success: false,
+                                err: err
+                            })
+                        }
+                        if (result) {
+                            db.query(`select * from rank order by average_score DESC`, (err, result) => {
+                                if (err) {
+                                    res.status(400).send({
+                                        success: false,
+                                        err: score_err
+                                    })
+                                }
+                                if (result) {
+                                    res.send({
+                                        message: "User rank updated",
+                                        success: true,
+                                        results: result
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+
+                // }
+                else {
+                    db.query(`select * from rank where user_id=${decoded_Username}`, (err, result) => {
+                        if (err) {
+                            res.status(400).send({
+                                success: false,
+                                err: err
+                            })
+                        }
+                        if (result) {
+                            db.query(`update rank set average_score=${total_score} where user_id=${decoded_Username}`, (err, result) => {
+                                if (err) {
+                                    res.status(400).send({
+                                        success: false,
+                                        err: err
+                                    })
+                                }
+                                if (result) {
+                                    db.query(`select user_name,average_score from rank order by average_score DESC`, (err, result) => {
+                                        if (err) {
+                                            res.status(400).send({
+                                                success: false,
+                                                err: score_err
+                                            })
+                                        }
+                                        if (result) {
+                                            res.send({
+                                                message: "User rank updated",
+                                                success: true,
+                                                results:result
+                                            })
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+
+
+        }
+    })
+}
+
+const new_login_api = async (req, res, next) => {
+    await db.query(`select * from user where Mobile_no=?`, [req.body.Mobile_no], (err1, result, feilds) => {
+        if (err1) {
+            res.status(400).send({
+                success: false,
+                err: err1
+            })
+        }
+        if (result) {
+            const token = jwt.sign({ data: result }, process.env.JWT_SECRET_KEY)
+            if (result.length) {
+                res.send({
+                    message: "User Exist And Login successfully",
+                    success: true,
+                    token: token,
+                    results: result
+                })
+            } else {
+                db.query('Insert into user(username,Mobile_no) values(?,?)', [req.body.username, req.body.Mobile_no], (berr, bresult, feilds) => {
+                    if (berr) {
+                        res.status(400).send({
+                            success: false,
+                            err: berr
+                        })
+                    }
+                    else {
+                        db.query(`select * from user where Mobile_no=?`, [req.body.Mobile_no], (berr1, result1, feilds) => {
+                            if (berr1) {
+                                res.status(400).send({
+                                    success: false,
+                                    err: berr1
+                                })
+                            } else {
+                                if (result1) {
+                                    const token = jwt.sign({ data: result1 }, process.env.JWT_SECRET_KEY)
+                                    if (result1.length) {
+                                        res.status(201).send({
+                                            message: "User Registered Successfully",
+                                            success: true,
+                                            token: token,
+                                            results: result1
+                                        })
+                                    }
+                                }
+                            }
+                        })
+                    }
+                })
+            }
+        }
+    })
+}
 module.exports = {
     user_signup,signup,check_Mo_no,user_login,user_update_language_and_category, user_logout,avtar_category, add_question,
     question, add_avtar, admin_signup, get_question_user, admin_update_question, admin_add_category,
     admin_add_language, admin_delete_language, total_user, total_language, total_category, admin_update_questionStatus,
     adminLogin1, answer1, quiz_category, admin_Statistics,admin_get_user,delete_user,admin_getQuestion,
     delete_question,admin_getQuestion_by_language_and_category,admin_getQuestion_by_Id,get_all_categories,
-    user_getQuestion_by_language_and_category
+    user_getQuestion_by_language_and_category,admin_forgot_password,user_get_all_categories,get_all_language, user_rank
+    ,new_login_api
 }
 

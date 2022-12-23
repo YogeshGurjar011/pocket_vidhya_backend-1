@@ -29,6 +29,7 @@ router.use(function(req, res, next) {
     next();});
 
 /**************USER ******************/
+router.post('/user/new/login',controller.new_login_api)
 
 router.post("/user/signup",controller.user_signup)
 
@@ -44,11 +45,19 @@ router.patch("/user/update_language_and_category",validation,controller.user_upd
 
 router.get("/user/getQuestion/:Language/:category",validation,controller.user_getQuestion_by_language_and_category)
 
+router.post('/user/answer',validation,controller1.answer_attempt)
+
+router.get('/user/get_all_categories',validation,controller.user_get_all_categories)
+
 //router.get('/getAvtar',upload.single('image'),controller.avtar_category)
 
 //router.post('/add_avtar', adminValidation,upload.single('image'),controller.add_avtar)
 
-router.post('/answer',validation,controller.answer1);
+//router.post('/answer',validation,controller.answer1);
+
+router.get("/user/my_progress",validation,QAcontroller.my_progress)
+
+router.post('/user/rank', validation, controller.user_rank)
 
 router.post ('/get_question_user',validation,controller.get_question_user)
 
@@ -71,7 +80,9 @@ router.put('/admin_update_question/:Question_id',adminValidation,controller.admi
 
 router.post('/admin/add_category',adminValidation,controller.admin_add_category)
 
-router.get('/admin/get_all_categories',adminValidation,controller.get_all_categories)
+router.get('/admin/get_all_categories',controller.get_all_categories)
+
+router.get("/admin/get_all_language",controller.get_all_language)
 
 router.post('/admin/delete_language',adminValidation,controller.admin_delete_language)
 
@@ -81,6 +92,8 @@ router.post('/admin/Signup',controller.admin_signup)
 
 router.post('/admin/Login',controller.adminLogin1)
 
+router.post('/admin/forgot_password',controller.admin_forgot_password)
+
 router.post('/admin/add_language',adminValidation,controller.admin_add_language)
 
 router.get('/admin/getStatistics',adminValidation,controller.admin_Statistics)
@@ -89,7 +102,7 @@ router.get('/admin/getQuestions/:category',controller.admin_getQuestion)
 
 router.get('/admin/getQuestions_by_id/:Question_id',controller.admin_getQuestion_by_Id)
 
-router.get('/admin/getUsers',adminValidation,controller.admin_get_user)
+router.get('/admin/getUsers',controller.admin_get_user)
 
 router.delete("/user/delete_user/:user_id",controller.delete_user)
 
@@ -97,7 +110,7 @@ router.delete("/admin/delete_question/:Question_id",controller.delete_question);
 
 router.get('/admin/getQuestion/:Language/:category',controller.admin_getQuestion_by_language_and_category)
 
-router.post('/user/answer',validation,controller1.answer_attempt)
+router.get('/admin/my_progress/:user_id',QAcontroller.admin_my_progress)
 
 router.post('/user/QA',QAcontroller.QA)
 

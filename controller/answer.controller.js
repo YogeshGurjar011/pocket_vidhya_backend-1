@@ -172,7 +172,7 @@ const answer_attempt = async (req, res, next) => {
     try {
         const auth = req.headers.authorization.split(" ")[1]
         const decode = jwt.decode(auth)
-        const decoded_Username = decode.data[0].user_id
+        let decoded_Username = decode.data[0].user_id
         db.query(`Select * from questionnaire where question_id=? and Status="ACTIVE" `, [req.body.question_id], (question_err, question_result) => {
             if (question_err) {
                 res.status(400).send({
@@ -282,7 +282,7 @@ const answer_attempt = async (req, res, next) => {
                                                                                 })
                                                                             }
                                                                             if (vacantAnswer_result) {
-                                                                                const a = (100*Total_Correct_Answers)/Total_Available_Questions
+                                                                                const percentage = (100*Total_Correct_Answers)/Total_Available_Questions
                                                                                 res.status(200).send({
                                                                                     success: true,
                                                                                     isCorrect: isCorrectans,
@@ -293,7 +293,7 @@ const answer_attempt = async (req, res, next) => {
                                                                                     Incorrect_Answers: Total_Incorrect_Answers,
                                                                                     Total_skiped_Questions: total_skipd_questions,
                                                                                     // Score: `${Total_Correct_Answers}/${Total_Available_Questions}`
-                                                                                    Score:a
+                                                                                    Score:percentage
 
                                                                                 })
                                                                             }
@@ -305,8 +305,9 @@ const answer_attempt = async (req, res, next) => {
                                                                 })
                                                             }
                                                             else {
-
+                                                                const percentage = (100*Total_Correct_Answers)/Total_Available_Questions
                                                                 res.status(200).send({
+                                                                    
                                                                     success: true,
                                                                     isCorrect: isCorrectans,
                                                                     msg: `Remaining ${Questions_RemainnigTo_Attempt} questions Should be Initiated for counting an Attempt`,
@@ -315,6 +316,7 @@ const answer_attempt = async (req, res, next) => {
                                                                     Correct_Answers: Total_Correct_Answers,
                                                                     Incorrect_Answers: Total_Incorrect_Answers,
                                                                     Total_skiped_Questions: total_skipd_questions,
+                                                                    Score:percentage
 
                                                                 })
 
