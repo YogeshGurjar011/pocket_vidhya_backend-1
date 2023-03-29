@@ -61,6 +61,8 @@ router.post('/user/rank', validation, controller.user_rank)
 
 router.post ('/get_question_user',validation,controller.get_question_user)
 
+router.get('/user/get_Unattempted_Question/:category',validation,QAcontroller.userQuestions)
+
 router.post('/quiz_Categories',validation,controller.quiz_category)
 //****************************************************************************/
 
@@ -114,7 +116,7 @@ router.get('/admin/my_progress/:user_id',QAcontroller.admin_my_progress)
 
 router.post('/user/QA',QAcontroller.QA)
 
-//***************************************************************************/
+
 
 
 module.exports=router
